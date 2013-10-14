@@ -1,0 +1,17 @@
+apply plugin: 'scala'
+apply plugin: 'idea'
+
+repositories {
+    mavenCentral()
+}
+
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.useCompileDaemon = false
+    scalaCompileOptions.useAnt = false
+}
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.10.2'
+    testCompile "org.specs2:specs2_2.10:2.2.2"
+    testCompile "junit:junit:4.11"
+}

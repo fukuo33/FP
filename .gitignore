@@ -1,0 +1,8 @@
+FP.iml
+FP.ipr
+FP.iws
+
+.gradle/
+out/
+target/
+build/
