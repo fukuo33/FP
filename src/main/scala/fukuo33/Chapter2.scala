@@ -1,5 +1,8 @@
 package fukuo33
 
+import scala.collection.immutable.{List => ScalaList}
+import scala.collection.immutable.{Nil => ScalaNil}
+
 /**
  * Created with IntelliJ IDEA.
  * User: fukuo33
@@ -16,8 +19,8 @@ object Chapter2 extends App {
   val first = findFirst(Array(7, 9, 13), (x: Int) => x == 13)
   println(s"first:$first")
 
-  println(isSorted(List(1, 2, 10, 4, 5), (x: Int, y: Int) => x < y))
-  println(isSorted(List(1, 3, 4, 10), (x: Int, y: Int) => x < y))
+  println(isSorted(ScalaList(1, 2, 10, 4, 5), (x: Int, y: Int) => x < y))
+  println(isSorted(ScalaList(1, 3, 4, 10), (x: Int, y: Int) => x < y))
 
   val x1 = curry((a: Int, b: Int) => a * b)
   val x2 = uncurry((a: Int) => (b: Int) => a * b)
@@ -55,8 +58,8 @@ object Chapter2 extends App {
   /**
    * Exercise2
    */
-  def isSorted[A](as: List[A], gt: (A,A) => Boolean): Boolean = as match {
-    case x :: Nil => true
+  def isSorted[A](as: ScalaList[A], gt: (A,A) => Boolean): Boolean = as match {
+    case x :: ScalaNil => true
     case x :: xs if gt(x, xs.head) => isSorted(xs, gt)
     case _ => false
   }
