@@ -28,7 +28,9 @@ object Chapter2 extends App {
 
   println(x1(2)(3))
   println(x2(2, 3))
-  print(x3(5))
+  println(x3(5))
+
+  println("fib:" +  fib(10))
 
 
   def abs(n: Int): Int = if (n < 0) -n else n
@@ -54,6 +56,20 @@ object Chapter2 extends App {
       else loop(n + 1)
     loop(0)
   }
+
+  /**
+   * Exercise1
+   */
+  def fib(nth: Int): Int = {
+    @annotation.tailrec
+    def f(position: Int, prepre: Int, pre: Int): Int = {
+      val sum = prepre + pre
+      if (position >= nth) sum
+      else f(position + 1, pre, sum)
+    }
+    f(1, 0, 1)
+  }
+
 
   /**
    * Exercise2

@@ -242,4 +242,91 @@ class Chapter3Spec extends SpecificationWithJUnit {
     }
   }
 
+  "Tree" should {
+    /** Exercise 25 */
+    "size" should {
+      "return" in {
+        Tree.size(Branch(Leaf(1), Leaf(2))) must_== 3
+        Tree.size(Branch(Branch(Leaf(1), Branch(Leaf(2), Leaf(3))), Leaf(4))) must_== 7
+      }
+    }
+
+    /** Exercise 26 */
+    "maximum" should {
+      "return" in {
+        Tree.maximum(Branch(Leaf(1), Leaf(2))) must_== 2
+        Tree.maximum(Branch(Branch(Leaf(1), Branch(Leaf(2), Leaf(3))), Leaf(4))) must_== 4
+        Tree.maximum(Branch(Branch(Leaf(1), Branch(Leaf(10), Leaf(3))), Leaf(4))) must_== 10
+      }
+    }
+
+    /** Exercise 27 */
+    "depth" should {
+      "return" in {
+
+        Tree.depth(Branch(Leaf(1), Leaf(2))) must_== 2
+
+        Tree.depth(
+          Branch(
+            Branch(
+              Leaf(1),
+              Branch(
+                Leaf(1),
+                Leaf(1))),
+            Leaf(1))) must_== 4
+
+        Tree.depth(
+          Branch(
+            Branch(
+              Leaf(1),
+              Branch(
+                Branch(
+                  Leaf(1),
+                  Leaf(2)),
+                Leaf(3))),
+            Leaf(4))) must_== 5
+      }
+    }
+  }
+
+  /** Exercise 28 */
+  "map" should {
+    "return" in {
+      Tree.map(Branch(Leaf(1), Leaf(2)))(a => a + 1) must_== Branch(Leaf(2), Leaf(3))
+
+      Tree.map(
+        Branch(
+          Branch(
+            Leaf("a"),
+            Branch(
+              Leaf("b"),
+              Leaf("c"))),
+          Leaf("d")))(a => a.toUpperCase) must_==
+        Branch(
+          Branch(
+            Leaf("A"),
+            Branch(
+              Leaf("B"),
+              Leaf("C"))),
+          Leaf("D"))
+    }
+  }
+
+  /** Exercise 29 */
+  "foldRight" should {
+    "return" in {
+      Tree.fold(Branch(Leaf(1), Leaf(2)))(_ + 1)(_ + _) must_== 5
+      Tree.fold(
+        Branch(
+          Branch(
+            Leaf(1),
+            Branch(
+              Branch(
+                Leaf(1),
+                Leaf(2)),
+              Leaf(3))),
+          Leaf(4)))(_ + 1)(_ + _) must_== 16
+    }
+  }
+
 }
