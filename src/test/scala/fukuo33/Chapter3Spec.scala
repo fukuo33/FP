@@ -240,6 +240,9 @@ class Chapter3Spec extends SpecificationWithJUnit {
     "return false" in {
       List.hasSubsequence(List(1, 2, 3, 4), List(1, 3)) must_== false
     }
+    "return true" in {
+      List.hasSubsequence(List(1, 2, 3, 4), List(1, 2, 3, 4)) must_== true
+    }
   }
 
   "Tree" should {

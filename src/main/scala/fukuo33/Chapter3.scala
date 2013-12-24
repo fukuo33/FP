@@ -13,9 +13,6 @@ object Chapter3 extends App {
   val ex2: List[Int] = Cons(1, Nil)
 
   val ex3: List[String] = Cons("a", Cons("b", Nil))
-
-
-
 }
 
 
@@ -136,6 +133,7 @@ object List {
 
   def hasSubsequence[A](l: List[A], sub: List[A]): Boolean = {
     def f(ll: List[A], lSub: List[A]): Boolean = (ll, lSub) match {
+      case (Nil, Nil) => true
       case (Nil, _) => false
       case (_, Nil) => true
       case (Cons(h1, t1), Cons(h2, t2)) => if (h1 == h2) f(t1, t2) else f(t1, sub)
