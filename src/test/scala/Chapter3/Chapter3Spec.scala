@@ -1,4 +1,4 @@
-package fukuo33
+package Chapter3
 
 import org.specs2.mutable._
 
@@ -316,7 +316,7 @@ class Chapter3Spec extends SpecificationWithJUnit {
   }
 
   /** Exercise 29 */
-  "foldRight" should {
+  "fold" should {
     "return" in {
       Tree.fold(Branch(Leaf(1), Leaf(2)))(_ + 1)(_ + _) must_== 5
       Tree.fold(
@@ -330,6 +330,72 @@ class Chapter3Spec extends SpecificationWithJUnit {
               Leaf(3))),
           Leaf(4)))(_ + 1)(_ + _) must_== 16
     }
+
+    "size2" should {
+      "return" in {
+        Tree.size2(Branch(Leaf(1), Leaf(2))) must_== 3
+        Tree.size2(Branch(Branch(Leaf(1), Branch(Leaf(2), Leaf(3))), Leaf(4))) must_== 7
+      }
+    }
+
+    "maximum2" should {
+      "return" in {
+        Tree.maximum2(Branch(Leaf(1), Leaf(2))) must_== 2
+        Tree.maximum2(Branch(Branch(Leaf(1), Branch(Leaf(2), Leaf(3))), Leaf(4))) must_== 4
+        Tree.maximum2(Branch(Branch(Leaf(1), Branch(Leaf(10), Leaf(3))), Leaf(4))) must_== 10
+      }
+    }
+
+    "depth2" should {
+      "return" in {
+
+        Tree.depth2(Branch(Leaf(1), Leaf(2))) must_== 2
+
+        Tree.depth2(
+          Branch(
+            Branch(
+              Leaf(1),
+              Branch(
+                Leaf(1),
+                Leaf(1))),
+            Leaf(1))) must_== 4
+
+        Tree.depth2(
+          Branch(
+            Branch(
+              Leaf(1),
+              Branch(
+                Branch(
+                  Leaf(1),
+                  Leaf(2)),
+                Leaf(3))),
+            Leaf(4))) must_== 5
+      }
+    }
+
+    "map2" should {
+      "return" in {
+        Tree.map2(Branch(Leaf(1), Leaf(2)))(a => a + 1) must_== Branch(Leaf(2), Leaf(3))
+
+        Tree.map2(
+          Branch(
+            Branch(
+              Leaf("a"),
+              Branch(
+                Leaf("b"),
+                Leaf("c"))),
+            Leaf("d")))(a => a.toUpperCase) must_==
+          Branch(
+            Branch(
+              Leaf("A"),
+              Branch(
+                Leaf("B"),
+                Leaf("C"))),
+            Leaf("D"))
+      }
+    }
+
+
   }
 
 }

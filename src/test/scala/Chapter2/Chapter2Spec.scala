@@ -1,4 +1,4 @@
-package fukuo33
+package Chapter2
 
 import org.specs2.mutable._
 

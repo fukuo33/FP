@@ -1,4 +1,4 @@
-package fukuo33
+package Chapter1
 
 import scala.collection.immutable.{List => ScalaList}
 

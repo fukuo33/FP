@@ -1,4 +1,4 @@
-package fukuo33
+package Chapter3
 
 /**
  * Created with IntelliJ IDEA.
@@ -68,10 +68,10 @@ object List {
     case Cons(h, t) => Cons(h, init(t))
   }
 
-  def foldRight[A,B](l: List[A], z: B)(f: (A, B) => B): B =
+  def foldRight[A,B](l: List[A], acc: B)(f: (A, B) => B): B =
     l match {
-      case Nil => z
-      case Cons(x, xs) => f(x, foldRight(xs, z)(f))
+      case Nil => acc
+      case Cons(x, xs) => f(x, foldRight(xs, acc)(f))
     }
 
   def sum2(l: List[Int]) = foldRight(l, 0)((x,y) => x + y)
@@ -169,9 +169,17 @@ object Tree {
     case Branch(left, right) => Branch(map(left)(f), map(right)(f))
   }
 
-  def fold[A,B](tree: Tree[A])(l: A => B)(b: (B,B) => B): B = tree match {
-    case Leaf(value) => l(value)
-    case Branch(left, right) => b(fold(left)(l)(b), fold(right)(l)(b))
+  def fold[A,B](tree: Tree[A])(f: A => B)(g: (B,B) => B): B = tree match {
+    case Leaf(value) => f(value)
+    case Branch(left, right) => g(fold(left)(f)(g), fold(right)(f)(g))
   }
+
+  def size2[A](tree: Tree[A]): Int = fold(tree)(a => 1)((l, r) => 1 + l + r)
+
+  def maximum2(tree: Tree[Int]): Int = fold(tree)(a => a)((l, r) => l max r)
+
+  def depth2[A](tree: Tree[A]): Int = fold(tree)(a => 1)((l, r) => 1 + (l max r))
+
+  def map2[A,B](tree: Tree[A])(f: A => B): Tree[B] = fold(tree)(a => Leaf(f(a)): Tree[B])((l, r) => Branch(l, r))
 
 }
