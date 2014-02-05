@@ -3,7 +3,7 @@ package Chapter4
 /**
  * Created by fukuo33 on 2013/12/23.
  */
-object Chapter4 extends App {
+object  Chapter4 extends App {
   println("Wellcome to Chapter4.")
 
   def failingFn(i: Int): Int = {
@@ -61,6 +61,62 @@ object Chapter4 extends App {
     try Some(a)
     catch { case e: Exception => None }
 
+
+  def parseInts(a: List[String]): Option[List[Int]] = Option.sequence(a map (i => Try(i.toInt)))
+
+  def meanWithEither(xs: IndexedSeq[Double]): Either[String, Double] =
+    if (xs.isEmpty)
+      Left("mean of empty list!")
+    else
+      Right(xs.sum / xs.length)
+
+  def safeDiv(x: Int, y: Int): Either[Exception, Int] =
+    try Right(x / y)
+    catch { case e: Exception => Left(e) }
+
+  def mkName(name: String): Either[String, Name] =
+    if (name == "" || name == null) Left("Name is empty.")
+    else Right(new Name(name))
+
+  def mkAge(age: Int): Either[String, Age] =
+    if (age < 0) Left("Age is out of range.")
+    else Right(new Age(age))
+
+  def mkPerson(name: String, age: Int): Either[String, Person] =
+    mkName(name).map2(mkAge(age))(Person)
+
+  def mkPerson2(name: String, age: Int): Either[List[String], Person] =
+    mkName(name).map2HaveMultiLeft(mkAge(age))(Person)
+}
+
+object InsuranceRate {
+  /**
+   * Top secret formula for computing an annual car
+   * insurance premium from two key factors.
+   */
+  def insuranceRateQuote(age: Int, numberOfSpeedingTickets: Int): Double ={
+    age * numberOfSpeedingTickets
+  }
+
+  def parseInsuranceRateQuote(
+                               age: String,
+                               numberOfSpeedingTickets: String): Option[Double] = {
+    val optAge: Option[Int] = Chapter4.Try { age.toInt }
+    val optTickets: Option[Int] = Chapter4.Try { numberOfSpeedingTickets.toInt }
+    Option.map2(optAge, optTickets)(insuranceRateQuote)
+  }
+
+  def parseInsuranceRateQuoteWithEither(
+                               age: String,
+                               numberOfSpeedingTickets: String): Either[Exception,Double] =
+    for {
+      a <- Either.Try { age.toInt }
+      tickets <- Either.Try { numberOfSpeedingTickets.toInt }
+    } yield insuranceRateQuote(a, tickets)
+
+}
+
+object Option {
   def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = {
     for (aValue <- a; bValue <- b) yield f(aValue, bValue)
   }
@@ -80,11 +136,9 @@ object Chapter4 extends App {
   }
 
   // smart code
-   def smartSequence[A](a: List[Option[A]]): Option[List[A]] = {
+  def smartSequence[A](a: List[Option[A]]): Option[List[A]] = {
     a.foldRight(Some(Nil): Option[List[A]]){(x, acc) => map2(x, acc)(_ :: _)}
   }
-
-  def parseInts(a: List[String]): Option[List[Int]] = sequence(a map (i => Try(i.toInt)))
 
   def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = {
     def sub(list: List[A], acc: List[B]): Option[List[B]] = {
@@ -104,58 +158,7 @@ object Chapter4 extends App {
   def smartTraverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = {
     a.foldRight(Some(Nil): Option[List[B]]){(x, acc) => map2(f(x), acc)(_ :: _)}
   }
-
-  def meanWithEither(xs: IndexedSeq[Double]): Either[String, Double] =
-    if (xs.isEmpty)
-      Left("mean of empty list!")
-    else
-      Right(xs.sum / xs.length)
-
-  def safeDiv(x: Int, y: Int): Either[Exception, Int] =
-    try Right(x / y)
-    catch { case e: Exception => Left(e) }
-
-  def TryWithEither[A](a: => A): Either[Exception, A] =
-    try Right(a)
-    catch { case e: Exception => Left(e) }
-
-  def sequenceWithEither[E, A](a: List[Either[E, A]]): Either[E, List[A]] = {
-    a.foldRight(Right(Nil): Either[E, List[A]]){(x, acc) => x.map2(acc)(_ :: _)}
-  }
-
-  def traverseWithEither[E, A, B](a: List[A])(f: A => Either[E, B]): Either[E, List[B]] = {
-    a.foldRight(Right(Nil): Either[E, List[B]]){(x, acc) => f(x).map2(acc)(_ :: _)}
-  }
-
 }
-
-object InsuranceRate {
-  /**
-   * Top secret formula for computing an annual car
-   * insurance premium from two key factors.
-   */
-  def insuranceRateQuote(age: Int, numberOfSpeedingTickets: Int): Double ={
-    age * numberOfSpeedingTickets
-  }
-
-  def parseInsuranceRateQuote(
-                               age: String,
-                               numberOfSpeedingTickets: String): Option[Double] = {
-    val optAge: Option[Int] = Chapter4.Try { age.toInt }
-    val optTickets: Option[Int] = Chapter4.Try { numberOfSpeedingTickets.toInt }
-    Chapter4.map2(optAge, optTickets)(insuranceRateQuote)
-  }
-
-  def parseInsuranceRateQuoteWithEither(
-                               age: String,
-                               numberOfSpeedingTickets: String): Either[Exception,Double] =
-    for {
-      a <- Chapter4.TryWithEither { age.toInt }
-      tickets <- Chapter4.TryWithEither { numberOfSpeedingTickets.toInt }
-    } yield insuranceRateQuote(a, tickets)
-
-}
-
 
 sealed trait Option[+A] {
   def map[B](f: A => B): Option[B] = this match {
@@ -187,6 +190,20 @@ case class Some[+A](get: A) extends Option[A]
 case object None extends Option[Nothing]
 
 
+object Either {
+  def Try[A](a: => A): Either[Exception, A] =
+    try Right(a)
+    catch { case e: Exception => Left(e) }
+
+  def sequence[E, A](a: List[Either[E, A]]): Either[E, List[A]] = {
+    a.foldRight(Right(Nil): Either[E, List[A]]){(x, acc) => x.map2(acc)(_ :: _)}
+  }
+
+  def traverse[E, A, B](a: List[A])(f: A => Either[E, B]): Either[E, List[B]] = {
+    a.foldRight(Right(Nil): Either[E, List[B]]){(x, acc) => f(x).map2(acc)(_ :: _)}
+  }
+}
+
 sealed trait Either[+E, +A] {
   def map[B](f: A => B): Either[E, B] = this match {
     case Right(value) => Right(f(value))
@@ -206,6 +223,50 @@ sealed trait Either[+E, +A] {
   def map2[EE >: E, B, C](b: Either[EE, B])(f: (A, B) => C): Either[EE, C] = {
     for(aValue <- this; bValue <- b) yield f(aValue, bValue)
   }
+
+  def map2HaveMultiLeft[EE >: E, B, C](b: Either[EE, B])(f: (A, B) => C): Either[List[EE], C] = {
+    (this, b) match {
+      case (Right(aValue), Right(bValue)) => Right(f(aValue, bValue))
+      case (Left(aValue), Left(bValue)) => Left(List(aValue, bValue))
+      case (Left(aValue), _) => Left(List(aValue))
+      case (_, Left(bValue)) => Left(List(bValue))
+    }
+  }
 }
 case class Left[+E](value: E) extends Either[E, Nothing]
 case class Right[+A](value: A) extends Either[Nothing, A]
+
+
+case class Person(name: Name, age: Age)
+sealed case class Name(value: String)
+sealed case class Age(value: Int)
+
+
+object Partial {
+//  def sequence[A, B](a: List[Partial[A, B]]): Partial[A, List[B]] = {
+//    a.foldRight(Success(Nil): Partial[A, List[B]]){(x, acc) => x.map2(acc)(_ :: _)}
+//  }
+//
+//  def traverse[E, A, B](a: List[A])(f: A => Either[E, B]): Either[E, List[B]] = {
+//    a.foldRight(Right(Nil): Either[E, List[B]]){(x, acc) => f(x).map2(acc)(_ :: _)}
+//  }
+}
+trait Partial[+A,+B] {
+  
+  def orElse[AA >: A, BB >: B](b: => Partial[AA, BB]): Partial[AA, BB] = this match {
+    case Success(value) => Success(value)
+    case Errors(_) => b
+  }
+
+  def map2[EE >: E, B, C](b: Partial[AA, BB])(f: (A, B) => C): Partial[List[EE], C] = {
+    (this, b) match {
+      case (Success(aValue), Success(bValue)) => Success(f(aValue, bValue))
+      case (Errors(aValue), Errors(bValue)) => Errors(List(aValue, bValue))
+      case (Errors(aValue), _) => Errors(List(aValue))
+      case (_, Errors(bValue)) => Errors(List(bValue))
+    }
+  }
+}
+
+case class Errors[+A](get: Seq[A]) extends Partial[A,Nothing]
+case class Success[+B](get: B) extends Partial[Nothing,B]

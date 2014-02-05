@@ -1,6 +1,7 @@
 package Chapter4
 
 import org.specs2.mutable._
+import java.lang.NumberFormatException
 
 class Chapter4Spec extends SpecificationWithJUnit {
 
@@ -33,6 +34,77 @@ class Chapter4Spec extends SpecificationWithJUnit {
       (None: Option[Int]).filter(v => v % 2 == 0) must_== None
     }
 
+    /** Exercise 3 */
+    "map2" should {
+      "return Some when a and b both Some" in {
+        val i: Option[Int] = Some(1)
+        val j: Option[Int] = Some(2)
+        Option.map2(i, j)((a, b) => a + b) must_== Some(3)
+      }
+      "return None when a is None" in {
+        val i: Option[Int] = None
+        val j: Option[Int] = Some(2)
+        Option.map2(i, j)((a, b) => a + b) must_== None
+      }
+      "return None when b is None" in {
+        val i: Option[Int] = Some(1)
+        val j: Option[Int] = None
+        Option.map2(i, j)((a, b) => a + b) must_== None
+      }
+    }
+
+    /** Exercise 4 */
+    "sequence" should {
+      "return List[Some] when all value is Some" in {
+        val l = Some(1) :: Some(2) :: Some(3) :: Nil
+        Option.sequence(l) must_== Some(1 :: 2 :: 3 :: Nil)
+      }
+      "return None when last element is None" in {
+        val l = Some(1) :: Some(2) :: None :: Nil
+        Option.sequence(l) must_== None
+      }
+      "return None when None even one" in {
+        val l = Some(1) :: None :: Some(3) :: Nil
+        Option.sequence(l) must_== None
+      }
+    }
+    "Option.smartSequence" should {
+      "return List[Some] when all value is Some" in {
+        val l = Some(1) :: Some(2) :: Some(3) :: Nil
+        Option.smartSequence(l) must_== Some(1 :: 2 :: 3 :: Nil)
+      }
+      "return None when last element is None" in {
+        val l = Some(1) :: Some(2) :: None :: Nil
+        Option.smartSequence(l) must_== None
+      }
+      "return None when None even one" in {
+        val l = Some(1) :: None :: Some(3) :: Nil
+        Option.smartSequence(l) must_== None
+      }
+    }
+
+    /** Exercise 5 */
+    "traverse" should {
+      "return Some(List) when all value is Some" in {
+        val l = "1" :: "2" :: "3" :: Nil
+        Option.traverse(l)(i => Chapter4.Try(i.toInt)) must_== Some(1 :: 2 :: 3 :: Nil)
+      }
+      "return None when None even one" in {
+        val l = "1" :: "a" :: "3" :: Nil
+        Option.traverse(l)(i => Chapter4.Try(i.toInt)) must_== None
+      }
+    }
+    "smartTraverse" should {
+      "return Some(List) when all value is Some" in {
+        val l = "1" :: "2" :: "3" :: Nil
+        Option.smartTraverse(l)(i => Chapter4.Try(i.toInt)) must_== Some(1 :: 2 :: 3 :: Nil)
+      }
+      "return None when None even one" in {
+        val l = "1" :: "a" :: "3" :: Nil
+        Option.smartTraverse(l)(i => Chapter4.Try(i.toInt)) must_== None
+      }
+    }
+
   }
 
   "abs0" should {
@@ -40,25 +112,6 @@ class Chapter4Spec extends SpecificationWithJUnit {
       Chapter4.absO(Some(-12.3)) must_== Some(12.3)
       Chapter4.absO(Some(12.3)) must_== Some(12.3)
       Chapter4.absO(None) must_== None
-    }
-  }
-
-  /** Exercise 3 */
-  "map2" should {
-    "return Some when a and b both Some" in {
-      val i: Option[Int] = Some(1)
-      val j: Option[Int] = Some(2)
-      Chapter4.map2(i, j)((a, b) => a + b) must_== Some(3)
-    }
-    "return None when a is None" in {
-      val i: Option[Int] = None
-      val j: Option[Int] = Some(2)
-      Chapter4.map2(i, j)((a, b) => a + b) must_== None
-    }
-    "return None when b is None" in {
-      val i: Option[Int] = Some(1)
-      val j: Option[Int] = None
-      Chapter4.map2(i, j)((a, b) => a + b) must_== None
     }
   }
 
@@ -74,57 +127,6 @@ class Chapter4Spec extends SpecificationWithJUnit {
     }
   }
 
-  /** Exercise 4 */
-  "sequence" should {
-    "return List[Some] when all value is Some" in {
-      val l = Some(1) :: Some(2) :: Some(3) :: Nil
-      Chapter4.sequence(l) must_== Some(1 :: 2 :: 3 :: Nil)
-    }
-    "return None when last element is None" in {
-      val l = Some(1) :: Some(2) :: None :: Nil
-      Chapter4.sequence(l) must_== None
-    }
-    "return None when None even one" in {
-      val l = Some(1) :: None :: Some(3) :: Nil
-      Chapter4.sequence(l) must_== None
-    }
-  }
-  "smartSequence" should {
-    "return List[Some] when all value is Some" in {
-      val l = Some(1) :: Some(2) :: Some(3) :: Nil
-      Chapter4.smartSequence(l) must_== Some(1 :: 2 :: 3 :: Nil)
-    }
-    "return None when last element is None" in {
-      val l = Some(1) :: Some(2) :: None :: Nil
-      Chapter4.smartSequence(l) must_== None
-    }
-    "return None when None even one" in {
-      val l = Some(1) :: None :: Some(3) :: Nil
-      Chapter4.smartSequence(l) must_== None
-    }
-  }
-
-  /** Exercise 5 */
-  "traverse" should {
-    "return Some(List) when all value is Some" in {
-      val l = "1" :: "2" :: "3" :: Nil
-      Chapter4.traverse(l)(i => Chapter4.Try(i.toInt)) must_== Some(1 :: 2 :: 3 :: Nil)
-    }
-    "return None when None even one" in {
-      val l = "1" :: "a" :: "3" :: Nil
-      Chapter4.traverse(l)(i => Chapter4.Try(i.toInt)) must_== None
-    }
-  }
-  "smartTraverse" should {
-    "return Some(List) when all value is Some" in {
-      val l = "1" :: "2" :: "3" :: Nil
-      Chapter4.smartTraverse(l)(i => Chapter4.Try(i.toInt)) must_== Some(1 :: 2 :: 3 :: Nil)
-    }
-    "return None when None even one" in {
-      val l = "1" :: "a" :: "3" :: Nil
-      Chapter4.smartTraverse(l)(i => Chapter4.Try(i.toInt)) must_== None
-    }
-  }
 
   /** Exercise 6 */
   "Either" should {
@@ -161,33 +163,93 @@ class Chapter4Spec extends SpecificationWithJUnit {
         i.map2(j)((a, b) => a + b) must_== Left("error message")
       }
     }
+
+    /** Exercise 7 */
+    "sequence" should {
+      "return List[Right] when all value is Right" in {
+        val l = Right(1) :: Right(2) :: Right(3) :: Nil
+        Either.sequence(l) must_== Right(1 :: 2 :: 3 :: Nil)
+      }
+      "return Left when last element is Left" in {
+        val l = Right(1) :: Right(2) :: Left("error message") :: Nil
+        Either.sequence(l) must_== Left("error message")
+      }
+      "return first Left when multiple Left" in {
+        val l = Right(1) :: Left("error message") :: Left("error message2") :: Nil
+        Either.sequence(l) must_== Left("error message")
+      }
+    }
+
+    "traverse" should {
+      "return Right(List) when all value is Right" in {
+        val l = "1" :: "2" :: "3" :: Nil
+        Either.traverse(l)(i => Either.Try(i.toInt)) must_== Right(1 :: 2 :: 3 :: Nil)
+      }
+      // TODO: How to implement beLeft?
+      //    "return Left when Left even one" in {
+      //      val l = "1" :: "a" :: "3" :: Nil
+      //      Chapter4.traverseWithEither(l)(i => Chapter4.TryWithEither(i.toInt)) must beLeft
+      //      (t => new NumberFormatException("For input string: \"a\""))
+      //    }
+    }
+
   }
 
-  /** Exercise 7 */
-  "sequenceWithEither" should {
-    "return List[Right] when all value is Right" in {
-      val l = Right(1) :: Right(2) :: Right(3) :: Nil
-      Chapter4.sequenceWithEither(l) must_== Right(1 :: 2 :: 3 :: Nil)
+
+  "mkPerson" should {
+    "return Left when name is invalid" in {
+      Chapter4.mkPerson("", 33) must_== Left("Name is empty.")
     }
-    "return Left when last element is Left" in {
-      val l = Right(1) :: Right(2) :: Left("error message") :: Nil
-      Chapter4.sequenceWithEither(l) must_== Left("error message")
+    "return Left when age is invalid" in {
+      Chapter4.mkPerson("makoto", -5) must_== Left("Age is out of range.")
     }
-    "return first Left when multiple Left" in {
-      val l = Right(1) :: Left("error message") :: Left("error message2") :: Nil
-      Chapter4.sequenceWithEither(l) must_== Left("error message")
+    "return Left when both the name and age are invalid" in {
+      Chapter4.mkPerson("", -5) must_== Left("Name is empty.")
+    }
+    "return Right when arguments valid value" in {
+      Chapter4.mkPerson("makoto", 33) must_== Right(Person(Name("makoto"), Age(33)))
     }
   }
 
-  "traverseWithEither" should {
-    "return Right(List) when all value is Right" in {
-      val l = "1" :: "2" :: "3" :: Nil
-      Chapter4.traverseWithEither(l)(i => Chapter4.TryWithEither(i.toInt)) must_== Right(1 :: 2 :: 3 :: Nil)
+  /** Exercise 8 */
+  "mkPerson2" should {
+    "return Left when name is invalid" in {
+      Chapter4.mkPerson2("", 33) must_== Left(List("Name is empty."))
     }
-    "return Left when Left even one" in {
-      val l = "1" :: "a" :: "3" :: Nil
-      Chapter4.traverseWithEither(l)(i => Chapter4.TryWithEither(i.toInt)) must be equalTo Left(new NumberFormatException("For input string: \"a\""))
+    "return Left when age is invalid" in {
+      Chapter4.mkPerson2("makoto", -5) must_== Left(List("Age is out of range."))
+    }
+    "return Left when both the name and age are invalid" in {
+      Chapter4.mkPerson2("", -5) must_== Left(List("Name is empty.", "Age is out of range."))
+    }
+    "return Right when arguments valid value" in {
+      Chapter4.mkPerson("makoto", 33) must_== Right(Person(Name("makoto"), Age(33)))
     }
   }
+  "Pertial" should {
+
+    "orElse" in {
+      (Success(15): Partial[String, Int]).orElse(Success(3)) must_== Success(15)
+      (Errors(Seq("error message")): Partial[String, Int]).orElse(Success(3)) must_== Success(3)
+    }
+    
+    "sequence" should {
+      "return List[Success] when all value is Success" in {
+        val l = Success(1) :: Success(2) :: Success(3) :: Nil
+        Partial.sequence(l) must_== Success(1 :: 2 :: 3 :: Nil)
+      }
+      "return Errors when last element is Errors" in {
+        val l = Success(1) :: Success(2) :: Errors(Seq("error message")) :: Nil
+        Partial.sequence(l) must_== Errors(Seq("error message"))
+      }
+      "return first Errors when multiple Errors" in {
+        val l = Success(1) :: Errors(Seq("error message")) :: Errors(Seq("error message2")) :: Nil
+        Partial.sequence(l) must_== Errors(Seq("error message", "error message"))
+      }
+    }
+    
+  }
+
+
 
 }
