@@ -68,6 +68,20 @@ class Chapter4Spec extends SpecificationWithJUnit {
         Option.sequence(l) must_== None
       }
     }
+    "sequenceR" should {
+      "return List[Some] when all value is Some" in {
+        val l = Some(1) :: Some(2) :: Some(3) :: Nil
+        Option.sequenceR(l) must_== Some(1 :: 2 :: 3 :: Nil)
+      }
+      "return None when last element is None" in {
+        val l = Some(1) :: Some(2) :: None :: Nil
+        Option.sequenceR(l) must_== None
+      }
+      "return None when None even one" in {
+        val l = Some(1) :: None :: Some(3) :: Nil
+        Option.sequenceR(l) must_== None
+      }
+    }
     "Option.smartSequence" should {
       "return List[Some] when all value is Some" in {
         val l = Some(1) :: Some(2) :: Some(3) :: Nil
@@ -87,21 +101,21 @@ class Chapter4Spec extends SpecificationWithJUnit {
     "traverse" should {
       "return Some(List) when all value is Some" in {
         val l = "1" :: "2" :: "3" :: Nil
-        Option.traverse(l)(i => Chapter4.Try(i.toInt)) must_== Some(1 :: 2 :: 3 :: Nil)
+        Option.traverse(l)(i => Option.Try(i.toInt)) must_== Some(1 :: 2 :: 3 :: Nil)
       }
       "return None when None even one" in {
         val l = "1" :: "a" :: "3" :: Nil
-        Option.traverse(l)(i => Chapter4.Try(i.toInt)) must_== None
+        Option.traverse(l)(i => Option.Try(i.toInt)) must_== None
       }
     }
     "smartTraverse" should {
       "return Some(List) when all value is Some" in {
         val l = "1" :: "2" :: "3" :: Nil
-        Option.smartTraverse(l)(i => Chapter4.Try(i.toInt)) must_== Some(1 :: 2 :: 3 :: Nil)
+        Option.smartTraverse(l)(i => Option.Try(i.toInt)) must_== Some(1 :: 2 :: 3 :: Nil)
       }
       "return None when None even one" in {
         val l = "1" :: "a" :: "3" :: Nil
-        Option.smartTraverse(l)(i => Chapter4.Try(i.toInt)) must_== None
+        Option.smartTraverse(l)(i => Option.Try(i.toInt)) must_== None
       }
     }
 
@@ -232,24 +246,58 @@ class Chapter4Spec extends SpecificationWithJUnit {
       (Success(15): Partial[String, Int]).orElse(Success(3)) must_== Success(15)
       (Errors(Seq("error message")): Partial[String, Int]).orElse(Success(3)) must_== Success(3)
     }
-    
+
+    "map2" should {
+      "return Success when a and b both Success" in {
+        val i: Partial[String, Int] = Success(1)
+        val j: Partial[String, Int] = Success(2)
+        i.map2(j)((a, b) => a + b) must_== Success(3)
+      }
+      "return Errors when a is Errors" in {
+        val i: Partial[String, Int] = Errors(Seq("error message1"))
+        val j: Partial[String, Int] = Success(2)
+        i.map2(j)((a, b) => a + b) must_== Errors(Seq("error message1"))
+      }
+      "return Errors when b is Errors" in {
+        val i: Partial[String, Int] = Success(1)
+        val j: Partial[String, Int] = Errors(Seq("error message2"))
+        i.map2(j)((a, b) => a + b) must_== Errors(Seq("error message2"))
+      }
+      "return Errors when a and b both Errors" in {
+        val i: Partial[String, Int] = Errors(Seq("error message1"))
+        val j: Partial[String, Int] = Errors(Seq("error message2"))
+        i.map2(j)((a, b) => a + b) must_== Errors(Seq("error message1", "error message2"))
+      }
+    }
+
     "sequence" should {
       "return List[Success] when all value is Success" in {
         val l = Success(1) :: Success(2) :: Success(3) :: Nil
         Partial.sequence(l) must_== Success(1 :: 2 :: 3 :: Nil)
       }
       "return Errors when last element is Errors" in {
-        val l = Success(1) :: Success(2) :: Errors(Seq("error message")) :: Nil
-        Partial.sequence(l) must_== Errors(Seq("error message"))
+        val l = Success(1) :: Success(2) :: Errors(Seq("error message1")) :: Nil
+        Partial.sequence(l) must_== Errors(Seq("error message1"))
       }
       "return first Errors when multiple Errors" in {
-        val l = Success(1) :: Errors(Seq("error message")) :: Errors(Seq("error message2")) :: Nil
-        Partial.sequence(l) must_== Errors(Seq("error message", "error message"))
+        val l = Success(1) :: Errors(Seq("error message1")) :: Errors(Seq("error message2")) :: Nil
+        Partial.sequence(l) must_== Errors(Seq("error message1", "error message2"))
       }
     }
-    
+
+    "traverse" should {
+      "return Success when all Success" in {
+        val l = "1" :: "2" :: "3" :: "4" :: Nil
+        Partial.traverse(l)(i => Partial.Try(i.toInt)) must_== Success(List(1, 2, 3, 4))
+      }
+
+      // TODO: How to implement beLeft?
+//      "return Errors" in {
+//        val l = "1" :: "a" :: "b" :: "4" :: Nil
+//        Partial.traverse(l)(i => Partial.Try(i.toInt)) must_== Errors(Seq(new NumberFormatException("For input string: \"a\""), new NumberFormatException("For input string: \"b\"")))
+//      }
+    }
+
   }
-
-
 
 }

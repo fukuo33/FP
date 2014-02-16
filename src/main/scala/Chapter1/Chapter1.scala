@@ -1,8 +1,5 @@
 package Chapter1
 
-import scala.collection.immutable.{List => ScalaList}
-
-
 /**
  * Created with IntelliJ IDEA.
  * User: fukuo33
@@ -56,8 +53,8 @@ class Cafe {
     (cup, Charge(cc, cup.price))
   }
 
-  def buyCoffees(cc: CreditCard, n: Int): (ScalaList[Coffee], Charge) = {
-    val purchases: ScalaList[(Coffee, Charge)] = ScalaList.fill(n)(buyCoffee(cc))
+  def buyCoffees(cc: CreditCard, n: Int): (List[Coffee], Charge) = {
+    val purchases: List[(Coffee, Charge)] = List.fill(n)(buyCoffee(cc))
     val (coffees, charges) = purchases.unzip
     (coffees, charges.reduce((c1,c2) => c1.combine(c2)))
   }
