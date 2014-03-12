@@ -74,6 +74,8 @@ object List {
       case Cons(x, xs) => f(x, foldRight(xs, acc)(f))
     }
 
+  def exists[A](l: List[A])(p: A => Boolean): Boolean = foldRight(l, false)((a, b) => p(a) || b)
+
   def sum2(l: List[Int]) = foldRight(l, 0)((x,y) => x + y)
 
   def product2(l: List[Double]) = foldRight(l, 1.0)(_ * _)

@@ -8,16 +8,29 @@ import scala.collection.immutable.Stream.cons
 object Chapter5 extends App {
   println("Wellcome to Chapter5.")
 
+  def square(x: Double): Double = x * x
+
   false && { println("!!"); true } // does not print anything
   true || { println("!!"); false } // doesn't print anything either
 
 
   println("==================")
 
-  def if2[A](cond: Boolean, onTrue: => A, onFalse: => A): A =
-    if (cond) onTrue else onFalse
-  val x = if2(false, sys.error("fail"), 3)
+  // use function call
+  def if2[A](cond: Boolean, onTrue: () => A, onFalse: () => A): A = if (cond) onTrue() else onFalse()
+  val a = 11
+  if2(a < 22,
+    () => println("a"), // The function literal syntax for creating an () => A
+    () => println("b")
+  )
+
+  println("==================")
+
+  // use call by name
+  def if3[A](cond: Boolean, onTrue: => A, onFalse: => A): A = if (cond) onTrue else onFalse
+  val x = if3(false, sys.error("fail"), 3)
   println(x)
+
 
   println("==================")
 
@@ -35,6 +48,12 @@ object Chapter5 extends App {
   }
   val xxx = maybeTwice2(true, { println("hi"); 1+41 })
   println(xxx)
+
+  println("==================")
+
+  Stream.cons(1, Stream.cons({sys.error("fail"); 2}, Stream.cons(3, Stream.empty)))
+
+
 }
 
 
@@ -70,53 +89,68 @@ sealed trait Stream[+A] {
   }
 
   def toList: List[A] = {
-    def f(s: => Stream[A]): List[A] = s match {
+    def f(s: Stream[A]): List[A] = s match {
       case Empty => Nil
-      case Cons(head, tail) => head() :: f(tail())
+      case Cons(h, t) => h() :: f(t())
     }
     f(this)
   }
 
   def take(n: Int): Stream[A] = {
-    def f(s: => Stream[A], count: Int): Stream[A] = s match {
+    def f(s: Stream[A], count: Int): Stream[A] = s match {
       case Empty => Empty
-      case Cons(head, tail) if count > n => Empty
-      case Cons(head, tail) => Cons(head, () => f(tail(), count + 1))
+      case Cons(_, _) if count > n => Empty
+      case Cons(h, t) => Stream.cons(h(), f(t(), count + 1))
     }
     f(this, 1)
   }
 
   def drop(n: Int): Stream[A] = {
-    def f(s: => Stream[A], count: Int): Stream[A] = s match {
+    def f(s: Stream[A], count: Int): Stream[A] = s match {
       case Empty => Empty
-      case Cons(head, tail) if count < n + 1 => f(tail(), count + 1)
-      case Cons(head, tail) => Cons(head, () => f(tail(), count + 1))
+      case Cons(_, t) if count < n + 1 => f(t(), count + 1)
+      case Cons(h, t) => Stream.cons(h(), f(t(), count + 1))
     }
     f(this, 1)
   }
 
   def takeWhile(p: A => Boolean): Stream[A] = {
-    def f(s: => Stream[A]): Stream[A] = s match {
+    def f(s: Stream[A]): Stream[A] = s match {
       case Empty => Empty
-      case Cons(head, tail) if p(head()) => Cons(head, () => f(tail()))
-      case Cons(head, tail) => Empty
+      case Cons(h, t) if p(h()) => Stream.cons(h(),f(t()))
+      case Cons(_, _) => Empty
     }
     f(this)
   }
+
+  def exists(p: A => Boolean): Boolean = this match {
+    case Empty => false
+    case Cons(h, t) => p(h()) || t().exists(p)
+  }
+
+  def foldRight[B](z: => B)(f: (A, => B) => B): B = this match {
+    case Empty => z
+    case Cons(h,t) => f(h(), t().foldRight(z)(f))
+  }
+
+  def existsUseFoldRight(p: A => Boolean): Boolean = foldRight(false)((a, b) => p(a) || b)
 
 }
 
 case object Empty extends Stream[Nothing]
 
+// 引数が関数渡し
 case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
 
 object Stream {
+  // 引数が名前渡し
+  // 値の評価がキャッシュされる
   def cons[A](hd: => A, tl: => Stream[A]): Stream[A] = {
     lazy val head = hd
     lazy val tail = tl
     Cons(() => head, () => tail)
   }
   def empty[A]: Stream[A] = Empty
-  def apply[A](as: A*): Stream[A] =
+  def apply[A](as: A* ): Stream[A] =
     if (as.isEmpty) empty else cons(as.head, apply(as.tail: _*))
 }

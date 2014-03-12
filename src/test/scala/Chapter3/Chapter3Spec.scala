@@ -398,4 +398,11 @@ class Chapter3Spec extends SpecificationWithJUnit {
 
   }
 
+  "List#exists" should {
+    "return true" in {
+      List.exists(List(1, 2, 3, 4, 5))(_ == 3) must_== true
+    }
+  }
+
+
 }
