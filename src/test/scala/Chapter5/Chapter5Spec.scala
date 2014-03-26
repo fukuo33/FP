@@ -63,5 +63,94 @@ class Chapter5Spec extends SpecificationWithJUnit {
     }
   }
 
+  "Stream#forAll" should {
+    "return true when all elements match" in {
+      val stream = Stream.cons(1, Stream.cons(2, Stream.cons(3, Stream.cons(4, Stream.cons(5, Stream.empty)))))
+      stream.forAll(_ < 10) must_== true
+    }
+    "return false and early terminate when not match elements" in {
+      val stream = Stream.cons(1, Stream.cons(2, Stream.cons(3, Stream.cons(4, Stream.cons({sys.error("fail"); 5}, Stream.empty)))))
+      stream.forAll(_ < 4) must_== false
+    }
+  }
+
+  "Stream#headOptionUseFoldRight" should {
+    "return Some head when exist element" in {
+      val stream = Stream.cons(1, Stream.cons({sys.error("fail"); 2}, Stream.cons(3, Stream.empty)))
+      stream.headOptionUseFoldRight must_== Some(1)
+    }
+    "return None when not exist element" in {
+      Stream().headOptionUseFoldRight must_== None
+    }
+  }
+
+  "Stream#map" should {
+    "return function apply Stream" in {
+      Stream(1, 2, 3, 4, 5).map(_ * 10).toList must_== List(10, 20, 30, 40, 50)
+    }
+    "return Empty when Empty" in {
+      Stream[Int]().map(_ * 10).toList must_== List()
+    }
+  }
+
+  "Stream#filter" should {
+    "return filtered elements" in {
+      Stream(1, 2, 3, 4, 5, 6).filter(_ % 2 == 0).toList must_== List(2, 4, 6)
+    }
+  }
+
+  "Stream#append" should {
+    "return appended elements" in {
+      Stream(1, 2, 3).append(Stream(4, 5, 6)).toList must_== List(1, 2, 3, 4, 5, 6)
+    }
+  }
+
+  "Stream#flatMap" should {
+    "return function apply and flat Stream" in {
+      Stream(1, 2, 3).flatMap(a => Stream(a, a)).toList must_== List(1, 1, 2, 2, 3, 3)
+    }
+  }
+
+  "Stream#find" should {
+    "return find first element" in {
+      val stream = Stream.cons(1, Stream.cons(2, Stream.cons(3, Stream.cons(4, Stream.cons({sys.error("fail"); 5}, Stream.empty)))))
+      stream.find(_ == 4) must_== Some(4)
+    }
+  }
+
+  "Stream#constant" should {
+    "return intinite Stream" in {
+      Stream.constant("a").take(5).toList must_== List("a", "a", "a", "a", "a")
+    }
+  }
+
+  "Stream#from" should {
+    "return intinite Stream" in {
+      Stream.from(10).take(5).toList must_== List(10, 11, 12, 13, 14)
+    }
+  }
+
+  "Stream#fibs" should {
+    "return intinite Stream" in {
+      Stream.fibs.take(10).toList must_== List(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
+    }
+  }
+
+  "Stream#unfold" should {
+    "return" in {
+      Stream.unfold(10)(s => if (s == 0) None else Some((s, s-1))).toList must_== List(10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+    }
+    "return fibs" in {
+      Stream.unfold((0, 1)){
+        case (cur, next) => Some((cur, (next, cur + next)))
+      }.take(10).toList must_== List(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
+      // 考え方 # f is next line
+      // (0, 1) -> (0, f(1, 0 + 1))
+      // (1, 1) -> (1, f(1, 1 + 1))
+      // (1, 2) -> (1, f(2, 1 + 2))
+      // (2, 3) -> (2, f(3, 2 + 3))
+    }
+  }
+
 
 }

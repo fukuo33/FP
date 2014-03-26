@@ -57,16 +57,14 @@ object Chapter2 extends App {
   /**
    * Exercise1
    */
-  def fib(nth: Int): Int = {
+  def fib(n: Int): Int = {
     @annotation.tailrec
-    def f(position: Int, prepre: Int, pre: Int): Int = {
-      val sum = prepre + pre
-      if (position >= nth) sum
-      else f(position + 1, pre, sum)
+    def loop(pos: Int, prev: Int, cur: Int): Int = {
+      if (pos == 0) prev
+      else loop(pos - 1, cur, prev + cur)
     }
-    f(1, 0, 1)
+    loop(n, 0, 1)
   }
-
 
   /**
    * Exercise2
