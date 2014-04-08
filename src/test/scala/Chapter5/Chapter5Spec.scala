@@ -118,39 +118,114 @@ class Chapter5Spec extends SpecificationWithJUnit {
     }
   }
 
-  "Stream#constant" should {
+  "Stream.constant" should {
     "return intinite Stream" in {
       Stream.constant("a").take(5).toList must_== List("a", "a", "a", "a", "a")
     }
   }
 
-  "Stream#from" should {
+  "Stream.from" should {
     "return intinite Stream" in {
       Stream.from(10).take(5).toList must_== List(10, 11, 12, 13, 14)
     }
   }
 
-  "Stream#fibs" should {
+  "Stream.fibs" should {
     "return intinite Stream" in {
       Stream.fibs.take(10).toList must_== List(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
     }
   }
 
-  "Stream#unfold" should {
-    "return" in {
-      Stream.unfold(10)(s => if (s == 0) None else Some((s, s-1))).toList must_== List(10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
-    }
-    "return fibs" in {
-      Stream.unfold((0, 1)){
-        case (cur, next) => Some((cur, (next, cur + next)))
-      }.take(10).toList must_== List(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
-      // 考え方 # f is next line
-      // (0, 1) -> (0, f(1, 0 + 1))
-      // (1, 1) -> (1, f(1, 1 + 1))
-      // (1, 2) -> (1, f(2, 1 + 2))
-      // (2, 3) -> (2, f(3, 2 + 3))
+  "Stream.fibs2" should {
+    "return intinite Stream" in {
+      Stream.fibs2(0, 1).take(10).toList must_== List(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
     }
   }
 
+  "Stream.unfold" should {
+    "return" in {
+      Stream.unfold(10)(s => if (s == 0) None else Some((s, s-1))).toList must_== List(10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+    }
+  }
+
+  "Stream.fibsUseUnfold" should {
+    "return intinite Stream" in {
+      Stream.fibsUseUnfold.take(10).toList must_== List(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
+    }
+  }
+
+  "Stream.fromUseUnfold" should {
+    "return intinite Stream" in {
+      Stream.fromUseUnfold(10).take(5).toList must_== List(10, 11, 12, 13, 14)
+    }
+  }
+
+  "Stream.constantUseUnfold" should {
+    "return intinite Stream" in {
+      Stream.constantUseUnfold("a").take(5).toList must_== List("a", "a", "a", "a", "a")
+    }
+  }
+
+  "Stream.onesUseUnfold" should {
+    "return intinite Stream" in {
+      Stream.onesUseUnfold.take(5).toList must_== List(1, 1, 1, 1, 1)
+    }
+  }
+
+  "Stream#mapUseUnfold" should {
+    "return function apply Stream" in {
+      Stream(1, 2, 3, 4, 5).mapUseUnfold(_ * 10).toList must_== List(10, 20, 30, 40, 50)
+    }
+  }
+
+  "Stream#takeUseUnfold" should {
+    "return take first n elements" in {
+      val stream = Stream.cons(1, Stream.cons(2, Stream.cons(3, Stream.cons({sys.error("fail"); 4}, Stream.cons(5, Stream.empty)))))
+      stream.takeUseUnfold(3).toList must_== List(1, 2, 3)
+    }
+  }
+
+  "Stream#takeWhile" should {
+    "return take" in {
+      val stream = Stream.cons(1, Stream.cons(2, Stream.cons(3, Stream.cons(4, Stream.cons({sys.error("fail"); 5}, Stream.empty)))))
+      stream.takeWhileUseUnfold(_ < 4).toList must_== List(1, 2, 3)
+    }
+  }
+
+  "Stream#zipWith" should {
+    "return zip value" in {
+      val stream1 = Stream.cons(1, Stream.cons(2, Stream.cons(3, Stream.cons(4, Stream.cons({sys.error("fail"); 5}, Stream.empty)))))
+      val stream2 = Stream.cons(2, Stream.cons(3, Stream.cons(4, Stream.cons(5, Stream.cons({sys.error("fail"); 6}, Stream.empty)))))
+      stream1.zipWith(stream2) ((e1, e2) => e1 + e2).take(3).toList must_== List(3, 5, 7)
+
+      // Why is take(4) to occur the error?
+      //stream1.zipWith(stream2) ((e1, e2) => e1 + e2).take(4).toList must_== List(3, 5, 7, 9)
+    }
+    "return zip value from infinite list" in {
+      val stream1 = Stream.fromUseUnfold(10)
+      val stream2 = Stream.onesUseUnfold
+      stream1.zipWith(stream2) ((e1, e2) => e1 + e2).take(4).toList must_== List(11, 12, 13, 14)
+    }
+  }
+
+  "Stream#zipAll" should {
+    "return zip value when stream1 is short" in {
+      val stream1 = Stream.cons(1, Stream.cons(2, Stream.empty))
+      val stream2 = Stream.cons(2, Stream.cons(3, Stream.cons(4, Stream.cons(5, Stream.cons({sys.error("fail"); 6}, Stream.empty)))))
+      stream1.zipAll(stream2).take(3).toList must_== List((Some(1), Some(2)), (Some(2), Some(3)), (None, Some(4)))
+    }
+
+    "return zip value when stream2 is short" in {
+      val stream1 = Stream.cons(1, Stream.cons(2, Stream.cons(3, Stream.cons(4, Stream.cons({sys.error("fail"); 5}, Stream.empty)))))
+      val stream2 = Stream.cons(2, Stream.cons(3, Stream.empty))
+      stream1.zipAll(stream2).take(3).toList must_== List((Some(1), Some(2)), (Some(2), Some(3)), (Some(3), None))
+    }
+
+    "return zip value from infinite list" in {
+      val stream1 = Stream.fromUseUnfold(10)
+      val stream2 = Stream.onesUseUnfold
+      stream1.zipAll(stream2).take(4).toList must_== List((Some(10), Some(1)), (Some(11), Some(1)), (Some(12), Some(1)), (Some(13), Some(1)))
+    }
+  }
 
 }

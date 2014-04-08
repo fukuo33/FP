@@ -168,7 +168,7 @@ sealed trait Stream[+A] {
 
   def foldRight[B](z: => B)(f: (A, => B) => B): B = this match {
     case Empty => z
-    case Cons(h,t) => f(h(), t().foldRight(z)(f))
+    case Cons(h, t) => f(h(), t().foldRight(z)(f))
   }
 
   def existsUseFoldRight(p: A => Boolean): Boolean = foldRight(false)((a, b) => p(a) || b)
@@ -188,6 +188,49 @@ sealed trait Stream[+A] {
 
   def find(p: A => Boolean): Option[A] = filter(p).headOption
 
+  def mapUseUnfold[B](f: A => B): Stream[B] = Stream.unfold(this) {
+    case Empty => None
+    case Cons(h, t) => Some(f(h()), t())
+  }
+
+  def takeUseUnfold(n: Int): Stream[A] = Stream.unfold(this, n) {
+    case (Empty, _) => None
+    case (Cons(_, _), m) if m <= 0 => None
+    case (Cons(h, t), m) => Some(h(), (t(), m - 1))
+  }
+
+  def takeWhileUseUnfold(p: A => Boolean): Stream[A] = Stream.unfold(this){
+    case Empty => None
+    case Cons(h, _) if !p(h()) => None
+    case Cons(h, t) => Some(h(), t())
+  }
+
+  def zipWith[B, C](other: Stream[B])(f: (A, B) => C): Stream[C] = Stream.unfold(this, other) {
+    case (Cons(h1, t1), Cons(h2, t2)) => Some(f(h1(), h2()), (t1(), t2()))
+    case (_, _) => None
+  }
+
+  def zipAll[B](other: Stream[B]): Stream[(Option[A], Option[B])] = Stream.unfold(this, other) {
+    case (Cons(h1, t1), Cons(h2, t2)) => Some((Some(h1()), Some(h2())), (t1(), t2()))
+    case (Cons(h1, t1), _) => Some((Some(h1()), None: Option[B]), (t1(), Stream.empty))
+    case (_, Cons(h2, t2)) => Some((None: Option[A], Some(h2()): Option[B]), (Stream.empty, t2()))
+    case (_, _) => None
+  }
+
+  def hasSubsequence(sub: Stream[A]): Boolean = {
+    //foldRight(false)((a, b) => p(a) || b)
+
+//    def f(ll: List[A], lSub: List[A]): Boolean = (ll, lSub) match {
+//      case (Nil, Nil) => true
+//      case (Nil, _) => false
+//      case (_, Nil) => true
+//      case (Cons(h1, t1), Cons(h2, t2)) => if (h1 == h2) f(t1, t2) else f(t1, sub)
+//    }
+//    f(l, sub)
+    false
+  }
+
+
 }
 
 case object Empty extends Stream[Nothing]
@@ -196,6 +239,7 @@ case object Empty extends Stream[Nothing]
 case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
 
 object Stream {
+
   // 引数が名前渡し
   // 値の評価がキャッシュされる
   def cons[A](hd: => A, tl: => Stream[A]): Stream[A] = {
@@ -203,7 +247,9 @@ object Stream {
     lazy val tail = tl
     Cons(() => head, () => tail)
   }
+
   def empty[A]: Stream[A] = Empty
+
   def apply[A](as: A* ): Stream[A] =
     if (as.isEmpty) empty else cons(as.head, apply(as.tail: _*))
 
@@ -216,10 +262,30 @@ object Stream {
     f(0)
   }
 
+  def fibs2(n: Int, m: Int): Stream[Int] = Stream.cons(n, fibs2(m, n + m))
+
   def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = {
     f(z) match {
       case None => Stream.empty
       case Some((cur, next)) => Stream.cons(cur, unfold(next)(f))
     }
   }
+
+  def fibsUseUnfold() = {
+    // 考え方 # f is next line
+    // (0, 1) -> (0, f(1, 0 + 1))
+    // (1, 1) -> (1, f(1, 1 + 1))
+    // (1, 2) -> (1, f(2, 1 + 2))
+    // (2, 3) -> (2, f(3, 2 + 3))
+    unfold(0, 1) {
+      case (cur, next) => Some(cur, (next, cur + next))
+    }
+  }
+
+  def fromUseUnfold(n: Int): Stream[Int] = unfold(n) ( m => Some(m, m + 1) )
+
+  def constantUseUnfold[A](a: A): Stream[A] = unfold(a) ( n => Some(n, n) )
+
+  def onesUseUnfold: Stream[Int] = unfold(1) ( n => Some(n, n))
+
 }
