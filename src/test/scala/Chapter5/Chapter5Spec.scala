@@ -228,4 +228,44 @@ class Chapter5Spec extends SpecificationWithJUnit {
     }
   }
 
+  "Stream#startsWith" should {
+    "return true when starts" in {
+      Stream(1, 2, 3).startsWith(Stream(1, 2)) must_== true
+    }
+
+    "return true when identical" in {
+      Stream(1, 2, 3, 4, 5).startsWith(Stream(1, 2, 3, 4, 5)) must_== true
+    }
+
+    "return false when not starts" in {
+      Stream(1, 2, 3, 4, 5).startsWith(Stream(2, 3)) must_== false
+    }
+
+    "return false when original is short length" in {
+      Stream(1, 2, 3).startsWith(Stream(1, 2, 3, 4, 5)) must_== false
+    }
+  }
+
+  "Stream#tails" should {
+    "return tails" in {
+//      Stream(1, 2, 3).tails must_== Stream(Stream(1,2,3), Stream(2,3), Stream(3), Stream())
+      Stream(1, 2, 3).tails.toList.size must_== 3
+      Stream(1, 2, 3).tails.toList(0).toList must_== List(1,2,3)
+      Stream(1, 2, 3).tails.toList(1).toList must_== List(2,3)
+      Stream(1, 2, 3).tails.toList(2).toList must_== List(3)
+    }
+  }
+
+  "Stream#hasSubsequence" should {
+    "return true" in {
+      Stream(1, 2, 3, 4, 5).hasSubsequence(Stream(2, 3)) must_== true
+    }
+  }
+
+  "Stream#scanRight" should {
+    "return" in {
+      Stream(1,2,3).scanRight(0)(_ + _).toList must_== List(1+2+3+0, 2+3+0, 3+0, 0)
+    }
+  }
+
 }

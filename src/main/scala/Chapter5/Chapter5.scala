@@ -217,17 +217,36 @@ sealed trait Stream[+A] {
     case (_, _) => None
   }
 
-  def hasSubsequence(sub: Stream[A]): Boolean = {
-    //foldRight(false)((a, b) => p(a) || b)
+//  def hasSubsequence(sub: Stream[A]): Boolean = {
+//    false
+//  }
 
-//    def f(ll: List[A], lSub: List[A]): Boolean = (ll, lSub) match {
-//      case (Nil, Nil) => true
-//      case (Nil, _) => false
-//      case (_, Nil) => true
-//      case (Cons(h1, t1), Cons(h2, t2)) => if (h1 == h2) f(t1, t2) else f(t1, sub)
-//    }
-//    f(l, sub)
-    false
+  def startsWith[A](s: Stream[A]): Boolean = {
+    zipAll(s).forAll {
+      case (Some(a), Some(b)) if a == b => true
+      case (Some(a), None) => true
+      case _ => false
+    }
+  }
+
+  def tails: Stream[Stream[A]] = {
+    Stream.unfold(this) { x =>
+      x match {
+        case Empty => None
+        case Cons(_, t) => Some(x, t())
+      }
+    }.append(Stream.empty)
+  }
+
+  def hasSubsequence[A](s: Stream[A]): Boolean = tails exists (_ startsWith s)
+
+  def scanRight[B](z: B)(f: (A, => B) => B): Stream[B] = {
+    Stream.unfold(this) { x =>
+      x match {
+        case Empty => None
+        case Cons(h, t) => Some(x.foldRight(z)(f), t())
+      }
+    }.append(Stream(z))
   }
 
 
